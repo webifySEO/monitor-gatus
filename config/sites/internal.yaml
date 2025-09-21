@@ -1,0 +1,30 @@
+# Internal Infrastructure Monitoring
+endpoints:
+  # INTERNAL
+  - name: Uptime Kuma (internal)
+    group: internal
+    url: http://uptime-kuma:3001/
+    interval: 30s
+    conditions:
+      - "[STATUS] < 400"
+      - "[RESPONSE_TIME] < 1500ms"
+
+  # PUBLIC
+  - name: Uptime Kuma (public)
+    group: external
+    url: https://uptime.webifyseo.com/
+    interval: 1m
+    conditions:
+      - "[STATUS] < 400"
+      - "[RESPONSE_TIME] < 2500ms"
+      - "[CERTIFICATE_EXPIRATION] > 168h"
+
+  # Gatus self-check (public)
+  - name: Gatus UI (public)
+    group: internal
+    url: https://monitor.webifyseo.com/
+    interval: 1m
+    conditions:
+      - "[STATUS] < 400"
+      - "[RESPONSE_TIME] < 2500ms"
+      - "[CERTIFICATE_EXPIRATION] > 168h"

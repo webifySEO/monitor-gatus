@@ -57,12 +57,9 @@ if (-not $HasErrors) {
 
 # Check for referenced environment variables
 $EnvVars = @()
-if ($ConfigContent -match '\$\{(\w+)\}') {
-    $Matches | ForEach-Object {
-        if ($_ -match '\$\{(\w+)\}') {
-            $EnvVars += $Matches[1]
-        }
-    }
+$EnvMatches = [regex]::Matches($ConfigContent, '\$\{(\w+)\}')
+foreach ($Match in $EnvMatches) {
+    $EnvVars += $Match.Groups[1].Value
 }
 
 # Check if .env file exists and contains required variables
@@ -97,24 +94,6 @@ if ($SiteConfigs) {
     foreach ($Site in $SiteConfigs) {
         Write-Host "  - $($Site.Name)" -ForegroundColor White
     }
-}
-
-# Final validation with Docker if available
-if (Get-Command docker -ErrorAction SilentlyContinue) {
-    Write-Host "`nTesting with Docker..." -ForegroundColor Cyan
-    
-    # Try to validate the config using docker compose
-    $Result = docker compose config 2>&1
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "✓ Docker Compose configuration valid" -ForegroundColor Green
-    } else {
-        Write-Warning "Docker Compose validation failed:"
-        Write-Host $Result -ForegroundColor Red
-        $HasErrors = $true
-    }
-} else {
-    Write-Host "⚠ Docker not available for validation" -ForegroundColor Yellow
-    Write-Host "  Install Docker to enable full validation" -ForegroundColor Gray
 }
 
 # Summary

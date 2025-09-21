@@ -1,4 +1,4 @@
-storage:
+﻿storage:
   type: sqlite
   path: /data/gatus.db
 
@@ -93,3 +93,27 @@ endpoints:
     interval: 6h
     conditions:
       - "[CERTIFICATE_EXPIRATION] > 240h"
+
+  # CLIENT: TEST SHOP
+  - name: Test Shop Checkout (page OK)
+    group: storefront
+    url: https://testshop.example.com/checkout/
+    interval: 60s
+    headers:
+      User-Agent: "webifySEO/1.0 (+https://webifyseo.com)"
+      Accept-Language: "en-GB,en;q=0.9"
+    conditions:
+      - "[STATUS] < 400"
+      - "[RESPONSE_TIME] < 2000ms"
+      - "[BODY] == pat(*woocommerce-checkout*)"
+      - "[BODY] == pat(*<h1 class=\"page-title\">Checkout</h1>*)"
+      - "[BODY] == pat(*<div class=\"woocommerce\"*)"
+    alerts:
+      - type: slack
+        enabled: true
+        failure-threshold: 1
+        success-threshold: 2
+        send-on-resolved: true
+        description: "Test Shop checkout page monitor failed"
+        channel: "client-testshop-example-com"
+        url: ${CLIENT_TESTSHOP-EXAMPLE-COM_SLACK}

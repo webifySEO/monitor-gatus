@@ -1,65 +1,103 @@
-# WooCommerce Site Monitoring Template
+# Enhanced WooCommerce Site Monitoring Template
 # Variables to replace:
 # {{SITE_NAME}} - Display name for the site (e.g., "New Shop")
 # {{SITE_URL}} - Full URL without trailing slash (e.g., "https://shop.example.com")
 # {{SITE_DOMAIN}} - Domain only (e.g., "shop.example.com")
 # {{SITE_SLUG}} - Short name for identification (e.g., "newshop")
+# {{ARCHIVE_URL}} - Shop/category page path (e.g., "/shop/" or "/products/")
+# {{PRODUCT_URL}} - Test product page path (e.g., "/product/sample-item/")
+# {{ARCHIVE_ELEMENT}} - Element that proves archive loaded (e.g., "products-grid", "woocommerce-loop")
+# {{ADD_TO_CART_ELEMENT}} - Element that proves add-to-cart works (e.g., "single_add_to_cart_button", "add-to-cart")
 # {{SLACK_WEBHOOK_VAR}} - Environment variable name for Slack webhook (e.g., "CLIENT2_SLACK")
 
 endpoints:
-  - name: {{SITE_NAME}} Checkout (page OK)
-    group: storefront
-    url: {{SITE_URL}}/checkout/
+  # PRIORITY 1: Server Health (60s) - Fastest response
+  - name: {{SITE_NAME}} Heartbeat
+    group: health
+    url: {{SITE_URL}}/wp-includes/js/jquery/jquery.min.js
     interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 800ms"
+    alerts:
+      - type: slack
+        enabled: true
+        failure-threshold: 1
+        success-threshold: 2
+        send-on-resolved: true
+        description: "🚨 {{SITE_NAME}} SERVER DOWN - Heartbeat failed"
+        channel: "client-{{SITE_SLUG}}"
+        url: ${{SLACK_WEBHOOK_VAR}}
+
+  # PRIORITY 2: Conversion Path (180s) - Business critical
+  - name: {{SITE_NAME}} Checkout
+    group: conversion
+    url: {{SITE_URL}}/checkout/
+    interval: 180s
     headers:
       User-Agent: "webifySEO/1.0 (+https://webifyseo.com)"
       Accept-Language: "en-GB,en;q=0.9"
     conditions:
       - "[STATUS] < 400"
-      - "[RESPONSE_TIME] < 2000ms"
-      - "[BODY] == pat(*woocommerce-checkout*)"             # WooCommerce marker
-      - "[BODY] == pat(*<h1 class=\"page-title\">Checkout</h1>*)"  # stable title marker
-      - "[BODY] == pat(*<div class=\"woocommerce\"*)"       # wrapper div
+      - "[RESPONSE_TIME] < 3000ms"
+      - "[BODY] == pat(*woocommerce-checkout*)"
+      - "[BODY] == pat(*<h1 class=\"page-title\">Checkout</h1>*)"
     alerts:
       - type: slack
         enabled: true
         failure-threshold: 1
         success-threshold: 2
         send-on-resolved: true
-        description: "{{SITE_NAME}} checkout page monitor failed"
+        description: "🛒 {{SITE_NAME}} CHECKOUT BROKEN - Conversion path down"
         channel: "client-{{SITE_SLUG}}"
         url: ${{SLACK_WEBHOOK_VAR}}
 
-  - name: {{SITE_NAME}} Checkout (no-cache)
+  # PRIORITY 3: Shop Functions (300s) - Product browsing
+  - name: {{SITE_NAME}} Shop Archive
     group: storefront
-    url: {{SITE_URL}}/checkout/
-    interval: 180s
+    url: {{SITE_URL}}{{ARCHIVE_URL}}
+    interval: 300s
     headers:
-      Cache-Control: "no-cache"
-      Pragma: "no-cache"
       User-Agent: "webifySEO/1.0 (+https://webifyseo.com)"
     conditions:
       - "[STATUS] < 400"
       - "[RESPONSE_TIME] < 2500ms"
-      - "[BODY] == pat(*woocommerce-checkout*)"
+      - "[BODY] == pat(*{{ARCHIVE_ELEMENT}}*)"
+      - "[BODY] == pat(*woocommerce*)"
     alerts:
       - type: slack
         enabled: true
         failure-threshold: 1
         success-threshold: 2
         send-on-resolved: true
-        description: "{{SITE_NAME}} checkout (no-cache) failed"
+        description: "⚠️ {{SITE_NAME}} SHOP ARCHIVE BROKEN - Product listings down"
         channel: "client-{{SITE_SLUG}}"
         url: ${{SLACK_WEBHOOK_VAR}}
 
-  - name: {{SITE_NAME}} jQuery (static OK)
-    group: assets
-    url: {{SITE_URL}}/wp-includes/js/jquery/jquery.min.js
-    interval: 1m
+  # PRIORITY 3: Core Commerce (300s) - Add to cart functionality
+  - name: {{SITE_NAME}} Product Engine
+    group: commerce
+    url: {{SITE_URL}}{{PRODUCT_URL}}
+    interval: 300s
+    headers:
+      User-Agent: "webifySEO/1.0 (+https://webifyseo.com)"
     conditions:
-      - "[STATUS] == 200"
-      - "[RESPONSE_TIME] < 1200ms"
+      - "[STATUS] < 400"
+      - "[RESPONSE_TIME] < 2500ms"
+      - "[BODY] == pat(*{{ADD_TO_CART_ELEMENT}}*)"
+      - "[BODY] == pat(*single-product*)"
+      - "[BODY] == pat(*woocommerce*)"
+    alerts:
+      - type: slack
+        enabled: true
+        failure-threshold: 1
+        success-threshold: 2
+        send-on-resolved: true
+        description: "🛒 {{SITE_NAME}} ADD TO CART BROKEN - Product engine down"
+        channel: "client-{{SITE_SLUG}}"
+        url: ${{SLACK_WEBHOOK_VAR}}
 
+  # SSL Certificate monitoring (6h)
   - name: {{SITE_NAME}} TLS
     group: certificates
     url: tls://{{SITE_DOMAIN}}:443

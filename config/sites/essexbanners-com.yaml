@@ -1,100 +1,6 @@
-﻿storage:
-  type: sqlite
-  path: /data/gatus.db
-
-metrics: true
-
-# Combined endpoints from all site configurations
+# Essex Banners WooCommerce Store Monitoring
 endpoints:
-  # INTERNAL INFRASTRUCTURE
-  - name: Uptime Kuma (internal)
-    group: internal
-    url: http://uptime-kuma:3001/
-    interval: 30s
-    conditions:
-      - "[STATUS] < 400"
-      - "[RESPONSE_TIME] < 1500ms"
-
-  - name: Uptime Kuma (public)
-    group: external
-    url: https://uptime.webifyseo.com/
-    interval: 1m
-    conditions:
-      - "[STATUS] < 400"
-      - "[RESPONSE_TIME] < 2500ms"
-      - "[CERTIFICATE_EXPIRATION] > 168h"
-
-  - name: Gatus UI (public)
-    group: internal
-    url: https://monitor.webifyseo.com/
-    interval: 1m
-    conditions:
-      - "[STATUS] < 400"
-      - "[RESPONSE_TIME] < 2500ms"
-      - "[CERTIFICATE_EXPIRATION] > 168h"
-
-  # CLIENT: SLOANE'S BANGKOK
-  - name: Sloane BKK Checkout (page OK)
-    group: storefront
-    url: https://bangkok.sloanes.co.th/checkout/
-    interval: 60s
-    headers:
-      User-Agent: "webifySEO/1.0 (+https://webifyseo.com)"
-      Accept-Language: "en-GB,en;q=0.9"
-    conditions:
-      - "[STATUS] < 400"
-      - "[RESPONSE_TIME] < 2000ms"
-      - "[BODY] == pat(*woocommerce-checkout*)"
-      - "[BODY] == pat(*<h1 class=\"page-title\">Checkout</h1>*)"
-      - "[BODY] == pat(*<div class=\"woocommerce\"*)"
-    alerts:
-      - type: slack
-        enabled: true
-        failure-threshold: 1
-        success-threshold: 2
-        send-on-resolved: true
-        description: "Checkout page monitor failed"
-        channel: "client-sloanes"
-        url: ${CLIENT1_SLACK}
-
-  - name: Sloane BKK Checkout (no-cache)
-    group: storefront
-    url: https://bangkok.sloanes.co.th/checkout/
-    interval: 180s
-    headers:
-      Cache-Control: "no-cache"
-      Pragma: "no-cache"
-      User-Agent: "webifySEO/1.0 (+https://webifyseo.com)"
-    conditions:
-      - "[STATUS] < 400"
-      - "[RESPONSE_TIME] < 2500ms"
-      - "[BODY] == pat(*woocommerce-checkout*)"
-    alerts:
-      - type: slack
-        enabled: true
-        failure-threshold: 1
-        success-threshold: 2
-        send-on-resolved: true
-        description: "Checkout (no-cache) failed"
-        channel: "client-sloanes"
-        url: ${CLIENT1_SLACK}
-
-  - name: Sloane BKK jQuery (static OK)
-    group: assets
-    url: https://bangkok.sloanes.co.th/wp-includes/js/jquery/jquery.min.js
-    interval: 1m
-    conditions:
-      - "[STATUS] == 200"
-      - "[RESPONSE_TIME] < 1200ms"
-
-  - name: Sloane BKK TLS
-    group: certificates
-    url: tls://bangkok.sloanes.co.th:443
-    interval: 6h
-    conditions:
-      - "[CERTIFICATE_EXPIRATION] > 240h"
-
-  # CLIENT: ESSEX BANNERS
+  # PRIORITY 1: Server Health (60s) - Ultra-lightweight heartbeat
   - name: Essex Banners Heartbeat
     group: health
     url: https://essexbanners.com/wp-includes/js/wp-emoji-release.min.js
@@ -112,6 +18,7 @@ endpoints:
         channel: "client-essexbanners"
         url: ${CLIENT_ESSEXBANNERS_SLACK}
 
+  # PRIORITY 2: Conversion Path (180s) - Business critical
   - name: Essex Banners Checkout
     group: conversion
     url: https://essexbanners.com/checkout/
@@ -134,6 +41,7 @@ endpoints:
         channel: "client-essexbanners"
         url: ${CLIENT_ESSEXBANNERS_SLACK}
 
+  # PRIORITY 3: Shop Functions (300s) - Product browsing
   - name: Essex Banners Shop Archive
     group: storefront
     url: https://essexbanners.com/product-category/banner-printing/
@@ -155,6 +63,7 @@ endpoints:
         channel: "client-essexbanners"
         url: ${CLIENT_ESSEXBANNERS_SLACK}
 
+  # PRIORITY 3: Core Commerce (300s) - Add to cart functionality
   - name: Essex Banners Product Engine
     group: commerce
     url: https://essexbanners.com/product/next-day-pvc-banner-printing/
@@ -177,6 +86,7 @@ endpoints:
         channel: "client-essexbanners"
         url: ${CLIENT_ESSEXBANNERS_SLACK}
 
+  # SSL Certificate monitoring (6h)
   - name: Essex Banners TLS
     group: certificates
     url: tls://essexbanners.com:443

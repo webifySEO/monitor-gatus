@@ -1,0 +1,64 @@
+# WordPress Site Monitoring Template
+# Variables to replace:
+# {{SITE_NAME}} - Display name for the site (e.g., "Client Blog")
+# {{SITE_URL}} - Full URL without trailing slash (e.g., "https://blog.example.com")
+# {{SITE_DOMAIN}} - Domain only (e.g., "blog.example.com")
+# {{SITE_SLUG}} - Short name for identification (e.g., "clientblog")
+# {{SLACK_WEBHOOK_VAR}} - Environment variable name for Slack webhook (e.g., "CLIENT3_SLACK")
+
+endpoints:
+  - name: {{SITE_NAME}} Homepage
+    group: website
+    url: {{SITE_URL}}/
+    interval: 60s
+    headers:
+      User-Agent: "webifySEO/1.0 (+https://webifyseo.com)"
+      Accept-Language: "en-GB,en;q=0.9"
+    conditions:
+      - "[STATUS] < 400"
+      - "[RESPONSE_TIME] < 2000ms"
+      - "[BODY] == pat(*<meta name=\"generator\" content=\"WordPress*)"  # WordPress marker
+    alerts:
+      - type: slack
+        enabled: true
+        failure-threshold: 1
+        success-threshold: 2
+        send-on-resolved: true
+        description: "{{SITE_NAME}} homepage monitor failed"
+        channel: "client-{{SITE_SLUG}}"
+        url: ${{SLACK_WEBHOOK_VAR}}
+
+  - name: {{SITE_NAME}} Admin Login
+    group: admin
+    url: {{SITE_URL}}/wp-admin/
+    interval: 180s
+    headers:
+      User-Agent: "webifySEO/1.0 (+https://webifyseo.com)"
+    conditions:
+      - "[STATUS] < 400"
+      - "[RESPONSE_TIME] < 3000ms"
+      - "[BODY] == pat(*wp-login*)"                         # WordPress login marker
+    alerts:
+      - type: slack
+        enabled: true
+        failure-threshold: 2
+        success-threshold: 2
+        send-on-resolved: true
+        description: "{{SITE_NAME}} admin access failed"
+        channel: "client-{{SITE_SLUG}}"
+        url: ${{SLACK_WEBHOOK_VAR}}
+
+  - name: {{SITE_NAME}} jQuery (static OK)
+    group: assets
+    url: {{SITE_URL}}/wp-includes/js/jquery/jquery.min.js
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+      - "[RESPONSE_TIME] < 1200ms"
+
+  - name: {{SITE_NAME}} TLS
+    group: certificates
+    url: tls://{{SITE_DOMAIN}}:443
+    interval: 6h
+    conditions:
+      - "[CERTIFICATE_EXPIRATION] > 240h"

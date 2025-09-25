@@ -117,8 +117,7 @@ if (-not $DryRun) {
     # Restart Gatus on the server
     Write-Host "`nRestarting Gatus service on server..." -ForegroundColor Cyan
     
-    $RestartCommand = "cd $RemotePath && docker compose down && docker compose up -d"
-    ssh "$User@$Server" $RestartCommand
+    ssh "$User@$Server" "cd $RemotePath; docker compose down; docker compose up -d"
     
     if ($LASTEXITCODE -eq 0) {
         Write-Host "✓ Gatus service restarted" -ForegroundColor Green

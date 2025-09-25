@@ -1,6 +1,11 @@
 ﻿# Data directory
 data/
 
+# Environment files (contains secrets)
+.env
+.env.local
+.env.production
+
 # Logs
 *.log
 

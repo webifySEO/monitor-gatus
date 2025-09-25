@@ -26,7 +26,8 @@ A modular Gatus health monitoring system for managing multiple client websites. 
 ```
 monitor-gatus/
 ├── docker-compose.yml        # Gatus container configuration
-├── .env                      # Environment variables (Slack webhooks)
+├── .env                      # Environment variables (LOCAL ONLY - not in Git)
+├── .env.template            # Template for required environment variables
 ├── config/
 │   ├── gatus.yaml           # Main configuration (combines all sites)
 │   ├── config.yaml.backup   # Original config backup
@@ -75,13 +76,25 @@ monitor-gatus/
   - Asset availability
   - SSL certificate
 
-## Environment Variables
+## Environment Variables Setup
 
-Each client gets their own Slack webhook in `.env`:
+**IMPORTANT**: Slack webhook URLs contain sensitive secrets and must never be committed to version control!
+
+### First-time Setup:
+1. Copy the template: `cp .env.template .env`
+2. Get new webhook URLs from Slack (old ones are invalidated)
+3. Edit `.env` with your actual webhook URLs
+
 ```bash
-CLIENT1_SLACK=https://hooks.slack.com/services/...     # Sloane's Bangkok
-CLIENT_NEWSHOP_SLACK=https://hooks.slack.com/services/...  # New sites...
+# Example .env (never commit this file!)
+CLIENT1_SLACK=https://hooks.slack.com/services/YOUR/NEW/WEBHOOK     # Sloane's Bangkok
+CLIENT_ESSEXBANNERS_SLACK=https://hooks.slack.com/services/YOUR/NEW/WEBHOOK  # Essex Banners
 ```
+
+### Getting New Slack Webhooks:
+- Visit: https://api.slack.com/apps/A08GH8PFUDD/install-on-team
+- Or create new webhooks at: https://api.slack.com/apps
+- Replace the placeholder URLs in your local `.env` file
 
 ## Documentation
 

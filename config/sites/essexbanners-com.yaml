@@ -17,6 +17,15 @@ endpoints:
         description: "🚨 ESSEX BANNERS SERVER DOWN - essexbanners.com heartbeat failed"
         channel: "client-essexbanners"
         url: ${CLIENT_ESSEXBANNERS_SLACK}
+      # CRITICAL ALERT: Server completely down for 10+ minutes  
+      - type: slack
+        enabled: true
+        failure-threshold: 10  # 10 failures at 60s interval = 10 minutes
+        success-threshold: 1
+        send-on-resolved: true
+        description: "🚨 CRITICAL: ESSEX BANNERS SERVER DOWN FOR 10+ MINUTES - TOTAL SITE OUTAGE 🚨"
+        channel: "critical-alerts" 
+        url: ${CRITICAL_ALERTS_SLACK}
 
   # PRIORITY 2: Conversion Path (180s) - Business critical
   - name: Essex Banners Checkout
@@ -40,6 +49,15 @@ endpoints:
         description: "🛒 ESSEX BANNERS CHECKOUT BROKEN - essexbanners.com/checkout/ conversion path down"
         channel: "client-essexbanners"
         url: ${CLIENT_ESSEXBANNERS_SLACK}
+      # CRITICAL ALERT: Checkout down for 30+ minutes (revenue impact)
+      - type: slack
+        enabled: true
+        failure-threshold: 10  # 10 failures at 180s interval = 30 minutes
+        success-threshold: 1
+        send-on-resolved: true
+        description: "🚨 CRITICAL: ESSEX BANNERS CHECKOUT DOWN FOR 30+ MINUTES - REVENUE IMPACT 🚨"
+        channel: "critical-alerts"
+        url: ${CRITICAL_ALERTS_SLACK}
 
   # PRIORITY 3: Shop Functions (300s) - Product browsing
   - name: Essex Banners Shop Archive
@@ -73,7 +91,7 @@ endpoints:
     conditions:
       - "[STATUS] < 400"
       - "[RESPONSE_TIME] < 2500ms"
-      - "[BODY] == pat(*.add_to_cart_button*)"
+      - "[BODY] == pat(*add_to_cart_button*)"
       - "[BODY] == pat(*single-product*)"
       - "[BODY] == pat(*woocommerce*)"
     alerts:

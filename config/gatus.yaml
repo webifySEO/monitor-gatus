@@ -33,6 +33,43 @@ endpoints:
       - "[RESPONSE_TIME] < 2500ms"
       - "[CERTIFICATE_EXPIRATION] > 168h"
 
+  # CRITICAL INFRASTRUCTURE MONITORING
+  - name: Uptime Kuma Critical Monitor
+    group: critical-infrastructure  
+    url: https://uptime.webifyseo.com/
+    interval: 60s
+    conditions:
+      - "[STATUS] < 400"
+      - "[RESPONSE_TIME] < 3000ms"
+    alerts:
+      # CRITICAL ALERT: Monitoring infrastructure down for 5+ minutes
+      - type: slack
+        enabled: true
+        failure-threshold: 5  # 5 failures at 60s = 5 minutes
+        success-threshold: 1
+        send-on-resolved: true
+        description: "🚨 CRITICAL: MONITORING INFRASTRUCTURE DOWN - UPTIME KUMA OFFLINE FOR 5+ MINUTES 🚨"
+        channel: "critical-alerts"
+        url: ${CRITICAL_ALERTS_SLACK}
+
+  - name: Gatus Critical Self-Check
+    group: critical-infrastructure
+    url: https://monitor.webifyseo.com/
+    interval: 60s  
+    conditions:
+      - "[STATUS] < 400"
+      - "[RESPONSE_TIME] < 3000ms"
+    alerts:
+      # CRITICAL ALERT: Gatus monitoring down for 5+ minutes  
+      - type: slack
+        enabled: true
+        failure-threshold: 5  # 5 failures at 60s = 5 minutes
+        success-threshold: 1
+        send-on-resolved: true
+        description: "🚨 CRITICAL: GATUS MONITORING SYSTEM DOWN FOR 5+ MINUTES - BLIND TO ALL SITES 🚨"
+        channel: "critical-alerts"
+        url: ${CRITICAL_ALERTS_SLACK}
+
   # CLIENT: SLOANE'S BANGKOK
   - name: Sloane BKK Checkout (page OK)
     group: storefront

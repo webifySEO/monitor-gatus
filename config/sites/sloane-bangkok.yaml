@@ -1,6 +1,6 @@
 # Client: Sloane's Bangkok WooCommerce Store
 endpoints:
-  - name: Sloane BKK Checkout (page OK)
+  - name: Sloanes BKK Checkout (page OK)
     group: storefront
     url: https://bangkok.sloanes.co.th/checkout/
     interval: 60s
@@ -22,6 +22,15 @@ endpoints:
         description: "Checkout page monitor failed"
         channel: "client-sloanes"
         url: ${CLIENT1_SLACK}
+      # CRITICAL ALERT: Site down for 10+ minutes
+      - type: slack
+        enabled: true
+        failure-threshold: 10  # 10 failures at 60s interval = 10 minutes
+        success-threshold: 1
+        send-on-resolved: true
+        description: "🚨 CRITICAL: SLOANE'S BANGKOK CHECKOUT DOWN FOR 10+ MINUTES - IMMEDIATE ACTION REQUIRED 🚨"
+        channel: "critical-alerts"
+        url: ${CRITICAL_ALERTS_SLACK}
 
   - name: Sloane BKK Checkout (no-cache)
     group: storefront
